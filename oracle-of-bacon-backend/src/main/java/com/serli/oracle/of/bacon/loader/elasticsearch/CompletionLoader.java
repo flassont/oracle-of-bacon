@@ -2,11 +2,15 @@ package com.serli.oracle.of.bacon.loader.elasticsearch;
 
 import com.serli.oracle.of.bacon.repository.ElasticSearchRepository;
 import io.searchbox.client.JestClient;
+import io.searchbox.core.Bulk;
+import io.searchbox.core.Index;
+import io.searchbox.indices.Flush;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CompletionLoader {
@@ -24,10 +28,25 @@ public class CompletionLoader {
 
         try (BufferedReader bufferedReader = Files.newBufferedReader(Paths.get(inputFilePath))) {
             bufferedReader.lines()
-                    .forEach(line -> {
-                        //TODO ElasticSearch insert
-                        System.out.println(line);
-                    });
+                    .skip(1)
+                    .parallel()
+                    .collect(() -> new Bulk.Builder().defaultIndex("bacon").defaultType("actors"),
+                            (builder, line) -> builder.addAction(new Index.Builder(String.format(Locale.ROOT, "{ \"name\": %s}", line)).build()),
+                            (builder, builder2) -> {
+                                try {
+                                    client.execute(builder.build());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                try {
+                                    client.execute(builder2.build());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            });
+        } finally {
+            client.execute(new Flush.Builder().build());
         }
 
         System.out.println("Inserted total of " + count.get() + " actors");
