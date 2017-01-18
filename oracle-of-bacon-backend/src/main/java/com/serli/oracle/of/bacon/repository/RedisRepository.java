@@ -1,5 +1,7 @@
 package com.serli.oracle.of.bacon.repository;
 
+import redis.clients.jedis.Jedis;
+
 import java.util.List;
 import redis.clients.jedis.Jedis;
 
@@ -18,8 +20,7 @@ public class RedisRepository {
     }
 
     public List<String> getLastTenSearches() {
-        // TODO implement last 10 searchs
-            jedis.ltrim(SEARCHES,0,9);
+        jedis.ltrim(SEARCHES,0,9);
         return jedis.lrange(SEARCHES, 0, 9);
     }
 }

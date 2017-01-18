@@ -38,7 +38,6 @@ public class ElasticSearchRepository {
     }
 
     public List<String> getActorsSuggests(String searchQuery) {
-        // TODO implement suggest
         try {
             String query = String.format(Locale.ROOT,
                     "{\n" +

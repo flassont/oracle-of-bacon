@@ -23,7 +23,6 @@ public class Neo4JRepository {
     }
 
     public List<?> getConnectionsToKevinBacon(String actorName) {
-        // TODO implement Oracle of Bacon
         try (final Session session = driver.session()) {
             final Path match = session.run(
                     "MATCH (bacon:Actor {name:\"Bacon, Kevin (I)\"}),\n" +
