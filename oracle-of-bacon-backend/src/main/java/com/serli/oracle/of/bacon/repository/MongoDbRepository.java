@@ -4,6 +4,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import org.bson.BsonDocument;
+import org.bson.BsonString;
 import org.bson.Document;
 
 import java.util.Optional;
@@ -17,7 +19,10 @@ public class MongoDbRepository {
     }
 
     public Optional<Document> getActorByName(String name) {
-        // TODO implement actor fetch
-        return null;
+        Document maybeActor = mongoClient.getDatabase("bacon")
+                .getCollection("actors")
+                .find(new BsonDocument("name", new BsonString(name)))
+                .first();
+        return Optional.ofNullable(maybeActor);
     }
 }

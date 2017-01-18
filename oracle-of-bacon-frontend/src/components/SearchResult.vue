@@ -1,5 +1,5 @@
 <template>
-  <div style="visibility: hidden;" class="cytos box" ref="cytos"/></div>
+  <div style="visibility: hidden;" class="cytos box" ref="cytos" v-on:selected="onActorSelected"/></div>
 </template>
 
 <script>
@@ -56,6 +56,11 @@
             'control-point-step-size': 40,
             'target-arrow-shape': 'triangle',
           }),
+    }).on('tap', 'node', (ev) => {
+      const bubbler = document.createEvent('HTMLEvents');
+      bubbler.initEvent('selected', true, true);
+      bubbler.data = { name: ev.cyTarget.data('value') };
+      container.dispatchEvent(bubbler);
     });
   };
 
@@ -63,6 +68,12 @@
     name: 'search-result',
     props: {
       actorName: String,
+      actorSelected: Function,
+    },
+    methods: {
+      onActorSelected(cyEvent) {
+        this.actorSelected(cyEvent.data.name);
+      },
     },
     watch: {
       actorName(newName) {
