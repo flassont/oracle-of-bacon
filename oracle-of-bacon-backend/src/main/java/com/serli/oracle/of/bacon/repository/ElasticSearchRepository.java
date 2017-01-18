@@ -41,25 +41,22 @@ public class ElasticSearchRepository {
         try {
             String query = String.format(Locale.ROOT,
                     "{\n" +
-                    "  \"query\": {\n" +
-                    "    \"match\": {\n" +
-                    "      \"name\": {\n" +
-                    "        \"query\":     \"%s\",\n" +
-                    "        \"fuzziness\": 1,\n" +
-                    "        \"operator\":  \"and\"\n" +
-                    "      }\n" +
+                    "  \"suggestion\": {\n" +
+                    "    \"text\": \"%s\"," +
+                    "    \"term\": {\n" +
+                    "      \"field\": \"suggest\"" +
                     "    }\n" +
                     "  }\n" +
                     "}", searchQuery);
-            Search suggestion = new Search.Builder(query)
+            final Suggest suggestion = new Suggest.Builder(query)
                     .addIndex("bacon")
                     .addType("actors")
                     .build();
-            SearchResult result = this.jestClient.execute(suggestion);
+            SuggestResult result = this.jestClient.execute(suggestion);
             if (result.isSucceeded()) {
-                return result.getHits(JsonObject.class)
+                return result.getSuggestions("suggestion")
                         .stream()
-                        .map(hit -> hit.source.get("name").getAsString())
+                        .map(s -> s.text)
                         .collect(Collectors.toList());
             }
         } catch (IOException e) {

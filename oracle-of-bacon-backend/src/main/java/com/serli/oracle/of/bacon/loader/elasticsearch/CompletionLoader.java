@@ -5,6 +5,7 @@ import com.serli.oracle.of.bacon.repository.ElasticSearchRepository;
 import io.searchbox.client.JestClient;
 import io.searchbox.core.Bulk;
 import io.searchbox.core.Index;
+import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.Flush;
 import io.searchbox.indices.mapping.PutMapping;
 
@@ -15,7 +16,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CompletionLoader {
@@ -33,18 +33,15 @@ public class CompletionLoader {
         PutMapping putMapping = new PutMapping.Builder(
                 "bacon",
                 "actors",
-                "{ \"actors\" : " +
-                        "{ \"properties\" : " +
-                        "{ \"name\" : " +
-                        "{\"type\" : \"string\"}" +
-                        "}," +
-                        "{ \"suggest\" :" +
-                        "{\"type\" : \"completion\"}" +
-                        "}" +
-                        "}"
+                "{ \"actors\": {\n" +
+                        "    \"properties\": {\n" +
+                        "        \"name\": {\"type\": \"text\"},\n" +
+                        "        \"suggest\": {\"type\": \"completion\"}   \n" +
+                        "    }\n" +
+                        "}}"
         ).build();
+        client.execute(new CreateIndex.Builder("bacon").build());
         client.execute(putMapping);
-        Bulk.Builder bulkBuilder = new Bulk.Builder().defaultIndex("bacon").defaultType("actors");
         try (BufferedReader bufferedReader = Files.newBufferedReader(Paths.get(inputFilePath))) {
             final Gson gson = new Gson();
             bufferedReader.lines()
@@ -57,7 +54,7 @@ public class CompletionLoader {
                                 suggestions.add(String.join(" ", suggestions));
                                 suggestions.add(line);
                                 final String jsonSuggestions = gson.toJson(suggestions);
-                                builder.addAction(new Index.Builder("{ \"name\": \"" + line + "\" , \"suggest\": { input : " + jsonSuggestions + "} }").build());
+                                builder.addAction(new Index.Builder("{ \"name\": \"" + line + "\" , \"suggest\": { \"input\" : " + jsonSuggestions + "} }").build());
                             },
                             (builder, builder2) -> {
                                 try {
@@ -72,9 +69,7 @@ public class CompletionLoader {
                                     e.printStackTrace();
                                 }
                             });
-        } finally
-
-        {
+        } finally {
             client.execute(new Flush.Builder().build());
         }
 
